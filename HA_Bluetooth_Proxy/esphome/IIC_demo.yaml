@@ -1,0 +1,62 @@
+esphome:
+  name: oled-i2c-test
+  on_boot:
+    priority: 600  # 更高优先级，确保电源先于其他组件启用
+    then:
+      - logger.log: "Enabling I2C power on GPIO45..."
+      - output.turn_on: i2c_power_en
+      - delay: 100ms  # 增加延时等待电源稳定
+      - logger.log: "I2C power enabled, scanning bus..."
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+
+# ================================
+# I2C 电源使能脚（GPIO45）
+# ================================
+output:
+  - platform: gpio
+    pin: GPIO45
+    id: i2c_power_en
+    setup_priority: -1000
+
+# ================================
+# I2C 总线
+# ================================
+i2c:
+  sda: GPIO1
+  scl: GPIO2
+  scan: true
+  frequency: 100kHz  # 降低频率提高兼容性
+
+# ================================
+# OLED 显示屏（SSD1306 128x64）
+# ================================
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    lambda: |-
+      it.printf(0, 0, id(my_font), "ESPHome OLED");
+
+# ================================
+# 字体定义
+# ================================
+font:
+  - file: "gfonts://Roboto"
+    id: my_font
+    size: 16
+
+# ================================
+# 定时打印调试信息
+# ================================
+interval:
+  - interval: 2s
+    then:
+      - logger.log: "OLED display should be working..."

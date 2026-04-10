@@ -1,0 +1,39 @@
+esphome:
+  name: esp32s3_rs485_test
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+  level: DEBUG
+  baud_rate: 115200
+
+uart:
+  id: uart_rs485
+  tx_pin: GPIO4
+  rx_pin: GPIO3
+  baud_rate: 115200
+  debug:
+    direction: BOTH
+    dummy_receiver: true
+    after:
+      delimiter: "\n"
+  on_uart_data:
+    - lambda: |-
+        std::string data = x.c_str();
+        ESP_LOGI("RS485-RX", "Received: %s", data.c_str());
+
+# 这个 text_sensor 用来“保存并显示”接收到的内容
+text_sensor:
+  - platform: template
+    name: "RS485 Received Data"
+    id: rs485_rx_text
+    update_interval: never
+
+interval:
+  - interval: 5s
+    then:
+      - uart.write: "Hello RS485 Test!\n"
+      - uart.write: [0x01, 0x02]

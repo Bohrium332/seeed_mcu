@@ -1,0 +1,64 @@
+esphome:
+  name: zzd-w5500-bt-proxy
+  friendly_name: zzd-w5500-bt-proxy
+  name_add_mac_suffix: true
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+  baud_rate: 115200
+  logs:
+    ethernet: DEBUG
+    network: DEBUG
+    component: DEBUG
+
+# ================================
+# 启用 Home Assistant API
+# ================================
+api:
+  encryption:
+    key: "fEEwdOWQS1g3TE/drG38WGgSna0l4GKoyqilP1wR0e4="
+
+# ================================
+# 启用 OTA 无线更新
+# ================================
+ota:
+  - platform: esphome
+
+# ================================
+# Bluetooth Proxy（核心功能）
+# ================================
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+    active: true
+
+bluetooth_proxy:
+  active: true
+
+# ================================
+# W5500 以太网（你提供的 SPI 引脚）
+# ================================
+ethernet:
+  type: W5500
+  cs_pin: GPIO2
+  clk_pin: GPIO7
+  mosi_pin: GPIO9
+  miso_pin: GPIO8
+  interrupt_pin: GPIO1
+
+output:
+  - platform: gpio
+    id: led_test
+    pin: GPIO21
+
+light:
+  - platform: binary
+    name: "LED Test"
+    output: led_test
+

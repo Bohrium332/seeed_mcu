@@ -1,0 +1,43 @@
+esphome:
+  name: ws2812b-test
+  friendly_name: WS2812B Test
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+
+# WS2812B 配置
+light:
+  - platform: esp32_rmt_led_strip
+    rgb_order: GRB
+    pin: GPIO38
+    num_leds: 1
+    rmt_channel: 0
+    chipset: WS2812
+    name: "LED"
+    id: led
+    restore_mode: ALWAYS_ON
+    default_transition_length: 300ms
+
+# RGB 颜色循环切换
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          static int color = 0;
+          auto call = id(led).turn_on();
+          call.set_brightness(0.3);
+          switch(color) {
+            case 0: call.set_rgb(1.0, 0.0, 0.0); break;  // 红
+            case 1: call.set_rgb(0.0, 1.0, 0.0); break;  // 绿
+            case 2: call.set_rgb(0.0, 0.0, 1.0); break;  // 蓝
+            case 3: call.set_rgb(1.0, 1.0, 0.0); break;  // 黄
+            case 4: call.set_rgb(1.0, 0.0, 1.0); break;  // 紫
+            case 5: call.set_rgb(0.0, 1.0, 1.0); break;  // 青
+          }
+          call.perform();
+          color = (color + 1) % 6;
+

@@ -1,0 +1,24 @@
+esphome:
+  name: ES8156_test
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+
+i2c:
+  sda: GPIO15
+  scl: GPIO16
+  scan: true
+
+audio_dac:
+  - platform: es8156
+    id: es8156_dac
+    # 如果你的板子有 MUTE / EN 引脚，还可以额外配 GPIO 控制
+
+media_player:
+  - platform: esp32_audio
+    name: "ES8156 Speaker"
+    dac: es8156_dac

@@ -1,0 +1,94 @@
+esphome:
+  name: es8156_audio_test
+
+  on_boot:
+    priority: 800
+    then:
+      - delay: 500ms
+      - logger.log: "ES8156 Audio Test Start"
+
+      - wait_until:
+          condition:
+            lambda: |-
+              return id(i2c_bus).is_ready();
+
+      - lambda: |-
+          ESP_LOGI("ES8156", "Start init...");
+
+          uint8_t addr = 0x08;
+
+          auto write = [&](uint8_t reg, uint8_t val){
+            uint8_t data[2] = {reg, val};
+
+            i2c::WriteBuffer buffers[1];
+            buffers[0].data = data;
+            buffers[0].len  = 2;
+
+            auto ret = id(i2c_bus).writev(addr, buffers, 1, true);
+
+            if(ret == i2c::ERROR_OK){
+              ESP_LOGI("ES8156", "W 0x%02X = 0x%02X", reg, val);
+            } else {
+              ESP_LOGE("ES8156", "I2C FAIL 0x%02X err=%d", reg, ret);
+            }
+          };
+
+          delay(10);
+          write(0x00, 0x01);   // 软复位
+          delay(10);
+          write(0x00, 0x00);
+
+          write(0x01, 0x10);   // I2S 16bit
+          write(0x02, 0x04);   // 时钟使能
+          write(0x04, 0x3C);   // DAC 电源
+          write(0x0F, 0x00);   // 取消静音
+          write(0x10, 0x1E);   // 音量 L
+          write(0x11, 0x1E);   // 音量 R
+
+          ESP_LOGI("ES8156", "Init done");
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+  level: DEBUG
+  baud_rate: 115200
+  hardware_uart: UART0
+
+i2c:
+  id: i2c_bus
+  sda: GPIO16
+  scl: GPIO15
+  scan: true
+
+i2s_audio:
+  id: i2s_bus
+  i2s_bclk_pin: GPIO11
+  i2s_lrclk_pin: GPIO12
+  i2s_mclk_pin: GPIO10
+
+speaker:
+  - platform: i2s_audio
+    id: spk
+    dac_type: external
+    i2s_audio_id: i2s_bus
+    i2s_dout_pin: GPIO13
+    # channel: stereo
+
+interval:
+  - interval: 100ms
+    then:
+      - lambda: |-
+          const float frequency = 1000.0f;
+          const int sampleRate = 44100;
+          static int16_t samples[256];
+
+          for (int i = 0; i < 256; i++) {
+            float t = (float)i / sampleRate;
+            float s = sinf(2 * M_PI * frequency * t);
+            samples[i] = (int16_t)(s * 16000);
+          }
+
+          id(spk).play((uint8_t*)samples, sizeof(samples));

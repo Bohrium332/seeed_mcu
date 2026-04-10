@@ -1,0 +1,32 @@
+esphome:
+  name: esp32s3_rs232_test
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+  level: DEBUG
+  baud_rate: 115200
+
+uart:
+  id: uart_rs232
+  tx_pin: GPIO47
+  rx_pin: GPIO48
+  baud_rate: 115200
+  
+  debug:
+    direction: RX  # 只监听接收方向的数据
+    dummy_receiver: true  # 启用虚拟接收器以读取数据
+    after:
+      delimiter: "\n"  # 当收到换行符时触发
+      timeout: 100ms   
+    sequence:
+      # 收到数据后自动发送回复
+      - lambda: |-
+          ESP_LOGI("uart_rs232", "收到 %d 字节数据", bytes.size());
+          UARTDebug::log_string(direction, bytes);
+      - uart.write: 
+          id: uart_rs232
+          data: "I get data!\n"

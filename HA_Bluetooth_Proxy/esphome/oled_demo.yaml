@@ -1,0 +1,78 @@
+esphome:
+  name: oled-i2c-test
+
+  on_boot:
+    priority: 800
+    then:
+      - logger.log: "Turning on I2C power..."
+      - output.turn_on: i2c_power_en
+      - delay: 300ms
+      - binary_sensor.template.publish:
+          id: i2c_power_ready
+          state: true
+      - logger.log: "I2C power is ready!"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+
+# ================================
+# I2C 电源使能 GPIO45
+# ================================
+output:
+  - platform: gpio
+    pin: GPIO45
+    id: i2c_power_en
+
+# ================================
+# I2C 生效标志位（关键）
+# ================================
+binary_sensor:
+  - platform: template
+    id: i2c_power_ready
+    internal: true
+
+# ================================
+# I2C 总线（这里只初始化引脚，不立即用）
+# ================================
+i2c:
+  sda: GPIO1
+  scl: GPIO2
+  scan: false        # 先关闭自动扫描
+  frequency: 100kHz
+
+# ================================
+# OLED（等标志位后再真正使用）
+# ================================
+display:
+  - platform: ssd1306_i2c
+    id: oled
+    model: "SSD1306 128x64"
+    address: 0x3C
+    lambda: |-
+      it.printf(0, 0, id(my_font), "ESPHome OLED");
+
+# ================================
+# 字体
+# ================================
+font:
+  - file: "gfonts://Roboto"
+    id: my_font
+    size: 16
+
+# ================================
+# 等电源就绪后再“触发一次扫描 + 验证”
+# ================================
+interval:
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            binary_sensor.is_on: i2c_power_ready
+          then:
+            - logger.log: "I2C power ready, now safe to use OLED."

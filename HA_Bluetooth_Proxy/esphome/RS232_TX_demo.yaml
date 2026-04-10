@@ -1,0 +1,22 @@
+esphome:
+  name: esp32s3_rs232_test
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+  level: DEBUG
+  baud_rate: 115200 
+
+uart:
+  id: uart_rs232
+  tx_pin: GPIO17
+  rx_pin: GPIO18
+  baud_rate: 115200
+
+interval:
+  - interval: 2s
+    then:
+      - uart.write: "TX: Hello RS232_1 Test!\n"
