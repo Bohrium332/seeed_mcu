@@ -13,12 +13,11 @@
 // ============================================================
 
 // ---------------- Pin Macros ----------------
-#define PIN_CODEC_XSMT  3   /
+#define PIN_CODEC_XSMT  3   
 #define PIN_I2S_MCLK    4   
 #define PIN_I2S_BCLK    5   
 #define PIN_I2S_LRCK    6   
 #define PIN_I2S_DOUT    7   
-
 #define PIN_I2C_SDA     15  
 #define PIN_I2C_SCL     16  
 
@@ -28,6 +27,7 @@
 static const char *WIFI_SSID = "dudu";
 static const char *WIFI_PASS = "poi55885";
 static const char *URL_ORIG  = "http://music.163.com/song/media/outer/url?id=1980818176.mp3";
+static const uint8_t AUDIO_VOLUME = 21;
 
 // ---------------- ESP32-audioI2S ----------------
 Audio audio;
@@ -176,7 +176,8 @@ void setup() {
   Serial.println("Init Audio pinout (with MCLK)...");
   audio.setPinout(PIN_I2S_BCLK, PIN_I2S_LRCK, PIN_I2S_DOUT, PIN_I2S_MCLK);
   printMemoryInfo();
-  audio.setVolume(6);
+  audio.setVolume(AUDIO_VOLUME);
+  Serial.printf("Audio volume: %u / 21\n", AUDIO_VOLUME);
 
   const String finalUrl = resolveRedirectOnce(URL_ORIG);
   Serial.print("Play URL: ");
